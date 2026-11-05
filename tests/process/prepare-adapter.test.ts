@@ -41,7 +41,7 @@ after(() => {
   rmSync(scratch, { recursive: true, force: true });
 });
 
-// Every launcher gets its own scratch HOME, so the routing cache it uses (userCacheHome for that
+// Every launcher gets its own scratch HOME, so the plugin cache it uses (userCacheHome for that
 // environment) is inside the test directory and the user's real cache is never touched.
 let homes = 0;
 const freshHome = () => {
@@ -182,8 +182,8 @@ describe("prepare_drawio_xml through the real launcher", () => {
     await s.exited();
   });
 
-  // Owner decision R2: routing uses the official libavoid pass, whose routing library is fetched
-  // without diagram data and falls back to the copy bundled with the Tool Server when offline.
+  // Routing uses the official libavoid pass with the routing library bundled in @drawio/mcp; it
+  // never downloads code. prepare-worker-routing.test.ts checks that on every platform.
   const blocked = `<mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/>${v("A", 0, 100)}<mxCell id="B" value="B" vertex="1" parent="1"><mxGeometry x="200" y="60" width="80" height="120" as="geometry"/></mxCell>${v("C", 420, 100)}${e("e1", "A", "C")}</root></mxGraphModel>`;
   const routedEdge = (xml: string) => /<mxCell\b[^>]*id="e1"[\s\S]*?<\/mxCell>/.exec(xml)?.[0] ?? "";
 
@@ -213,7 +213,7 @@ describe("prepare_drawio_xml through the real launcher", () => {
   it("still routes with outbound network denied (bundled routing library)", { skip: skip || (process.platform !== "darwin" ? "sandbox-exec is macOS only" : false) }, async () => {
     const profile = path.join(scratch, "deny-net-routing.sb");
     writeFileSync(profile, "(version 1)\n(allow default)\n(deny network-outbound (remote ip))\n(deny network-outbound (remote tcp))\n(deny network-outbound (remote udp))\n");
-    // A fresh HOME has no cached routing library, so the result can only come from the bundled copy.
+    // A fresh HOME has no cached routing library, and none may appear after routing.
     const home = freshHome();
     assert.deepEqual(filesUnder(routingCacheFor(home)), []);
     const s = launch(["/usr/bin/sandbox-exec", "-f", profile], home);
@@ -224,7 +224,7 @@ describe("prepare_drawio_xml through the real launcher", () => {
       const edge = routedEdge(result.content[0].text);
       assert.match(edge, /libavoidRouting=1/);
       assert.match(edge, /<mxPoint/);
-      assert.ok(!filesUnder(routingCacheFor(home)).some((f) => f.endsWith("libavoid-routing.json")), "downloaded while network was denied");
+      assert.ok(!filesUnder(routingCacheFor(home)).some((f) => f.endsWith("libavoid-routing.json")), "routing wrote a cached routing library");
     } finally {
       s.child.kill("SIGTERM");
       await s.exited();

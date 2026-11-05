@@ -49,7 +49,7 @@ The agent can show a diagram in a fenced `drawio` block or save a `.drawio` file
 
 The bundled draw.io viewer runs in a sandboxed frame with network access blocked. External images, web fonts and remote stencils are not loaded, and diagram links do not open. Shape search uses a shipped local index.
 
-ELK setup downloads code from the pinned draw.io release on GitHub and verifies its SHA-256. Edge routing can download its library from `viewer.diagrams.net` into the plugin's private cache; no diagram content is sent in that request. Diagram content read or written by an agent enters that agent's conversation and is sent to its model provider like other tool results.
+ELK setup downloads code from the pinned draw.io release on GitHub and verifies its SHA-256. Edge routing uses the routing library bundled in the official `@drawio/mcp` package and downloads nothing. Diagram content read or written by an agent enters that agent's conversation and is sent to its model provider like other tool results.
 
 Sources larger than 2,000,000 characters and compressed pages expanding beyond 8,000,000 bytes are refused. Internal DTD entities are expanded on the daemon under additional limits; external DTDs, external entities and parameter entities are rejected. Older inline diagrams pause to limit memory use and can be shown again.
 

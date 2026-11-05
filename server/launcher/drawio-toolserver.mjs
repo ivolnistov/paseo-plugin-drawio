@@ -3,8 +3,8 @@
 // The relay hides the tools that open diagrams in a browser at app.diagrams.net, refuses
 // calls to them, and adds the Paseo surface contract as MCP server instructions. It also serves
 // prepare_drawio_xml, which runs the official XML passes in a worker and returns the XML. Shape
-// search and ELK layout read assets shipped beside this file; the official edge-routing pass
-// downloads its routing library (no diagram data) and falls back to its bundled copy offline.
+// search reads an index shipped with the plugin, ELK layout reads a verified bundle prepared at
+// install time, and the official edge-routing pass uses the routing library bundled in @drawio/mcp.
 import { spawn } from "node:child_process";
 import { existsSync, realpathSync } from "node:fs";
 import path from "node:path";

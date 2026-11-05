@@ -14,8 +14,8 @@ Shows draw.io diagrams inside Paseo and lets agents draw them with the official 
   the draw.io XML reference and shape search. Paths resolve from the workspace root.
   `prepare_drawio_xml` runs the official XML repair, model normalization, label fitting,
   optional ELK layout and optional obstacle-avoiding edge routing (libavoid) on the daemon and
-  returns the XML; it opens no browser and writes no workspace files (routing updates only the
-  plugin's library cache), and the agent then saves the result
+  returns the XML; it opens no browser and writes no workspace files, and the agent then saves
+  the result
   or shows it. CSV and Mermaid conversion are not offered.
 - **`/drawio`.** `/drawio <request>` sends the request to the current agent. `/drawio` alone asks
   the agent to find out what you want drawn. While the agent is working, `/drawio` is refused
@@ -54,10 +54,9 @@ are never loaded; such diagrams show a notice instead.
   directory and keeps it only if it matches the SHA-256 pinned in the plugin. After that, layout
   works offline from the verified copy with no further network checks; a changed or broken
   download is rejected and never replaces a verified copy.
-- Edge routing uses the official Tool Server code, which downloads its routing library from
-  viewer.diagrams.net (a request for code; no diagram content is sent) into the plugin's own
-  folder in your user cache directory, and uses the copy bundled with the Tool Server when
-  offline.
+- Edge routing runs the official Tool Server routing code with the routing library bundled in
+  the `@drawio/mcp` package. The plugin points the Tool Server at that copy, so routing never
+  downloads code from viewer.diagrams.net and works offline.
 - Diagram content an agent reads or writes is part of that agent's conversation and goes to its
   model provider like any other tool result.
 

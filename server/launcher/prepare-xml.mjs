@@ -11,8 +11,8 @@ const ROUTING_VALUES = Object.freeze(["libavoid"]);
 
 const CONTRACT =
   "Repairs, normalizes and optionally lays out draw.io XML with the official draw.io engine and " +
-  "returns the resulting XML. It does not open anything and does not write files in the workspace " +
-  "(edge routing only updates the plugin's own cache of the official routing library): save the " +
+  "returns the resulting XML. It does not open anything and does not write files in the workspace; " +
+  "edge routing uses the routing library bundled with the official draw.io package. Save the " +
   "result to a .drawio file or reply with it in a drawio fence.";
 
 const PASEO_NOTE =

@@ -1,0 +1,65 @@
+name: checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        # Explicit bash makes Actions run steps with `bash --noprofile --norc -eo pipefail`,
+        # so a failing `npm test` is not masked by `| tee`.
+        shell: bash
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22.18.0
+          cache: npm
+          cache-dependency-path: npm-shrinkwrap.json
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # The repository's own preparation step downloads the pinned draw.io ELK bundle and keeps it
+      # only if it matches the pinned size and SHA-256. It exits non-zero on any failure.
+      - name: Prepare pinned ELK fixture
+        env:
+          XDG_CACHE_HOME: ${{ runner.temp }}/elk-cache
+        run: |
+          npm run prepare-elk
+          fixture="$(node --input-type=module -e '
+            const { verifiedElkBundle } = await import("./server/launcher/elk-bundle.mjs");
+            const file = await verifiedElkBundle();
+            if (!file) { console.error("verified ELK bundle missing after preparation"); process.exit(1); }
+            process.stdout.write(file);
+          ')"
+          echo "S1_ELK_FIXTURE=$fixture" >> "$GITHUB_ENV"
+
+      # ELK tests skip when the pinned bytes are unavailable; CI must not pass on a silent skip.
+      - name: Unit and process tests
+        run: |
+          npm test 2>&1 | tee "$RUNNER_TEMP/test.log"
+          if grep -q "pinned ELK bytes unavailable" "$RUNNER_TEMP/test.log"; then
+            echo "::error::ELK tests were skipped: the pinned fixture was not loaded"
+            exit 1
+          fi
+
+      - name: Package dry run
+        run: npm pack --dry-run --ignore-scripts

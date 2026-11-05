@@ -7,9 +7,9 @@ This repository is prepared for Git-based distribution. It is not yet listed in 
 - Run the typecheck and tests with a compatible Node version.
 - Check `npm pack --dry-run --ignore-scripts` includes the runtime entries, imported modules, bundled viewer and shape index, licenses, shrinkwrap, overview, examples and both manifest media files.
 - Confirm screenshots show the current interface with sample data and no private details.
-- Before changing visibility, obtain the owner's decision on historical author email addresses and worker hostname metadata, the six checkpoint branches, and internal planning/acceptance reports. All become public with the repository. Removing a current file does not erase its history. Keep the repository private until that decision; do not rewrite history without authorization.
+- Check the final public tree and author metadata before changing visibility. The owner-authorized history squash and removal of six checkpoint branches are complete; a private recovery bundle preserves the original history. The current tree still includes internal planning and acceptance reports.
 - Install the selected Git revision on an isolated test daemon and exercise the file panel, inline rendering and agent tools.
-- Review the runtime routing-library download against the registry's explicit-confirmation requirement. The current implementation discloses the download but does not present its own confirmation prompt. Documentation alone does not resolve this question.
+- Verify routing uses the library bundled in the pinned `@drawio/mcp` package without network requests or a previously downloaded cache. The adapter points the package's exported routing-source object at that local file; dependency upgrades must recheck that internal interface and the vendored path.
 - Resolve or document the availability of corresponding source for the optional ELK bundle. See `NOTICE.md`; the bundle is downloaded rather than shipped in this repository.
 - Obtain owner approval of the final repository text, public visibility change and submission text before publishing them.
 

@@ -55,6 +55,10 @@ async function prepare({ sourceDir, content, postLayout, direction, routing, elk
   }
 
   if (options.routing === "libavoid") {
+    // A local file path makes cdn-cache.js read the routing library bundled in @drawio/mcp
+    // from disk, with no network request and no cache write.
+    const cdnCache = await load(sourceDir, "cdn-cache.js");
+    cdnCache.ROUTING_CORE.url = path.join(sourceDir, "..", "vendor", "libavoid", "libavoid-routing.js");
     // The official pass never throws: it returns the XML unchanged when routing does not apply.
     const routing = await load(sourceDir, "libavoid-pass.js");
     const routed = await routing.routeXml(xml);

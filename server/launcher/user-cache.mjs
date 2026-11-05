@@ -5,7 +5,7 @@ import path from "node:path";
 
 /**
  * The platform's per-user cache directory for this plugin, never a shared temporary directory:
- * it holds code that is evaluated later (the routing library and the ELK bundle).
+ * it holds code that is evaluated later (the verified ELK bundle).
  */
 export function userCacheHome(env = process.env, platform = process.platform, home = homedir()) {
   if (platform === "darwin") return path.join(home, "Library", "Caches", "paseo-plugin-drawio");
