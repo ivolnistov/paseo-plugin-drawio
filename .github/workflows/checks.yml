@@ -1,15 +1,20 @@
 name: checks
 
 on:
+  # Tag pushes are left to release.yml, which calls this workflow before publishing.
   push:
+    branches: ["**"]
   pull_request:
+  workflow_call:
 
 permissions:
   contents: read
 
+# A distinct group from release.yml, so a release run never cancels or waits on itself.
+# Superseded branch runs are cancelled; tag (release) runs always finish.
 concurrency:
   group: checks-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
 jobs:
   test:

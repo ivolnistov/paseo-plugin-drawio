@@ -1,0 +1,125 @@
+name: release
+
+# Pushing a tag vX.Y.Z (or vX.Y.Z-prerelease) that matches package.json and npm-shrinkwrap.json
+# runs the full checks and then publishes a GitHub Release with the `npm pack` archive and its
+# SHA-256 checksum. Nothing is published to npm.
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  version:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      version: ${{ steps.check.outputs.version }}
+      prerelease: ${{ steps.check.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22.18.0
+
+      # The tag is read from GITHUB_REF_NAME, never interpolated into the script.
+      - name: Check tag against package and lock versions
+        id: check
+        run: |
+          node --input-type=module -e '
+            import { readFileSync, appendFileSync } from "node:fs";
+            const tag = process.env.GITHUB_REF_NAME;
+            const pkg = JSON.parse(readFileSync("package.json", "utf8"));
+            const lock = JSON.parse(readFileSync("npm-shrinkwrap.json", "utf8"));
+            const version = pkg.version;
+            const errors = [];
+            if (!/^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/.test(version ?? "")) errors.push(`package.json version "${version}" is not X.Y.Z or X.Y.Z-prerelease`);
+            if (tag !== `v${version}`) errors.push(`tag "${tag}" does not equal "v${version}" from package.json`);
+            if (lock.version !== version) errors.push(`npm-shrinkwrap.json version "${lock.version}" does not equal "${version}"`);
+            if (lock.packages?.[""]?.version !== version) errors.push(`npm-shrinkwrap.json packages[""].version "${lock.packages?.[""]?.version}" does not equal "${version}"`);
+            if (errors.length) { for (const e of errors) console.log(`::error::${e}`); process.exit(1); }
+            appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\nprerelease=${version.includes("-")}\n`);
+            console.log(`Releasing ${tag}`);
+          '
+
+  checks:
+    needs: version
+    permissions:
+      contents: read
+    uses: ./.github/workflows/checks.yml
+
+  publish:
+    needs: [version, checks]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: bash
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+      PRERELEASE: ${{ needs.version.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22.18.0
+
+      # `files` in package.json selects the contents; dependencies are not bundled.
+      - name: Pack archive and checksum
+        run: |
+          dist="$RUNNER_TEMP/dist"
+          mkdir -p "$dist"
+          npm pack --ignore-scripts --pack-destination "$dist"
+          archive="paseo-plugin-drawio-$VERSION.tgz"
+          test -f "$dist/$archive"
+          (cd "$dist" && sha256sum "$archive" > SHA256SUMS && sha256sum -c SHA256SUMS)
+
+      - name: Write release notes
+        run: |
+          cat > "$RUNNER_TEMP/notes.md" <<EOF
+          Install this release in Paseo:
+
+          \`\`\`sh
+          paseo plugin add git:$GITHUB_REPOSITORY --ref $GITHUB_REF_NAME
+          \`\`\`
+
+          Assets:
+
+          - \`paseo-plugin-drawio-$VERSION.tgz\`: the plugin source, bundled viewer, assets, licenses and \`npm-shrinkwrap.json\`, as packed by \`npm pack\`. Dependencies are not included; Paseo installs them from the lock when the plugin is installed.
+          - \`SHA256SUMS\`: the SHA-256 checksum of the archive.
+
+          Paseo installs the plugin from the Git tag; the archive is provided for inspection and archiving.
+          EOF
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          flags=()
+          if [ "$PRERELEASE" = "true" ]; then flags+=(--prerelease); fi
+          gh release create "$GITHUB_REF_NAME" \
+            "$RUNNER_TEMP/dist/paseo-plugin-drawio-$VERSION.tgz" \
+            "$RUNNER_TEMP/dist/SHA256SUMS" \
+            --verify-tag \
+            --title "$GITHUB_REF_NAME" \
+            --notes-file "$RUNNER_TEMP/notes.md" \
+            "${flags[@]}"

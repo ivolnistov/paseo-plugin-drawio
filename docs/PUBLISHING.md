@@ -13,6 +13,17 @@ This repository is prepared for Git-based distribution. It is not yet listed in 
 - Resolve or document the availability of corresponding source for the optional ELK bundle. See `NOTICE.md`; the bundle is downloaded rather than shipped in this repository.
 - Obtain owner approval of the final repository text, public visibility change and submission text before publishing them.
 
+## GitHub releases
+
+Pushing a tag `vX.Y.Z` (or `vX.Y.Z-<prerelease>`) runs `.github/workflows/release.yml`:
+
+1. The tag must equal `v` plus the `version` in `package.json`, and `npm-shrinkwrap.json` must carry the same version at its top level and in `packages[""]`. Bump all three before tagging.
+2. The full checks (`checks.yml`: typecheck and all tests with the verified ELK bundle) run once for the tag; a failure stops the release.
+3. `npm pack --ignore-scripts` builds `paseo-plugin-drawio-X.Y.Z.tgz`, and `SHA256SUMS` records its checksum.
+4. `gh release create --verify-tag` publishes a GitHub Release with both files and fixed notes containing the tag install command. A version with a prerelease suffix is marked as a prerelease. Nothing is published to npm.
+
+The archive holds the plugin source, assets, licenses and the lock, without dependencies. Paseo installs from the Git tag (`paseo plugin add git:ivolnistov/paseo-plugin-drawio --ref vX.Y.Z`), not from the archive. Pushing a tag is a publication step and needs owner approval like the others above.
+
 `npm-shrinkwrap.json` is the committed dependency lock for this repository; `npm ci` consumes it. There is no separate `package-lock.json`.
 
 The screenshots and metadata are release materials, not a statement that registry review has completed. Preserve any remaining validation gaps in the release record.
