@@ -1,0 +1,51 @@
+{
+  "name": "paseo-plugin-drawio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "View draw.io diagrams in Paseo file tabs and agent replies, and give agents the official draw.io tools",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ivolnistov/paseo-plugin-drawio.git"
+  },
+  "homepage": "https://github.com/ivolnistov/paseo-plugin-drawio#readme",
+  "bugs": {
+    "url": "https://github.com/ivolnistov/paseo-plugin-drawio/issues"
+  },
+  "files": [
+    "paseo-plugin.json",
+    "OVERVIEW.md",
+    "NOTICE.md",
+    "LICENSE",
+    "assets/",
+    "examples/",
+    "licenses/",
+    "npm-shrinkwrap.json",
+    "index.client.tsx",
+    "index.server.ts",
+    "client/",
+    "server/",
+    "shared/"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-transform-types --no-warnings --import ./tests/support/register.mjs --test \"tests/unit/*.test.ts\" \"tests/process/*.test.ts\"",
+    "prepare-elk": "node server/launcher/prepare-elk.mjs"
+  },
+  "dependencies": {
+    "@drawio/mcp": "1.10.1",
+    "libxml2-wasm": "0.7.2",
+    "pako": "2.2.0"
+  },
+  "devDependencies": {
+    "@getpaseo/plugin": "0.15.0",
+    "@tanstack/react-query": "5.90.11",
+    "@types/node": "20.19.25",
+    "@types/pako": "2.0.4",
+    "@types/react": "19.2.7",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "typescript": "5.9.3",
+    "zod": "4.4.3"
+  }
+}

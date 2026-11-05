@@ -1,0 +1,24 @@
+{
+  "id": "drawio",
+  "name": "draw.io",
+  "description": "View draw.io diagrams in Paseo file tabs and agent replies, and give agents the official draw.io tools",
+  "media": ["assets/inline-diagram.png", "assets/file-panel.png"],
+  "requirements": {
+    "paseo": ">=0.15.0"
+  },
+  "build": [
+    [
+      "npm",
+      "ci",
+      "--omit=dev",
+      "--ignore-scripts",
+      "--no-audit",
+      "--no-fund"
+    ],
+    [
+      "node",
+      "server/launcher/prepare-elk.mjs",
+      "--optional"
+    ]
+  ]
+}

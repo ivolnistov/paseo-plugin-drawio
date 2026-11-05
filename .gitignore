@@ -1,0 +1,22 @@
+# Dependencies and local tool output
+node_modules/
+*.tgz
+.DS_Store
+
+# Spike evidence, runtime and validation state stay out of the product repository
+.spikes/
+.validation/
+.publication-review/
+runtime/
+*.log
+
+# Secrets
+.env
+.env.*
+*.pem
+password
+
+# Planning collateral (kept locally, not part of the plugin)
+/ASTRA-*.md
+/DESIGN*.md
+/S0-READONLY-FINDINGS.md
